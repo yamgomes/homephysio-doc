@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>HomePhysio - Painel profissional</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <div class="logo">✳ <strong>homephysio</strong></div>
+        <p class="role">ÁREA PROFISSIONAL</p>
+        <nav>
+          <a href="#inicio">Visão geral</a><a href="#plano">Criar atividade</a
+          ><a href="#planos">Atividades salvas</a>
+        </nav>
+        <div class="aside-note">
+          Protótipo local<br /><small>Use somente dados fictícios.</small>
+        </div>
+      </aside>
+      <main id="inicio">
+        <header>
+          <div>
+            <p class="eyebrow">ÁREA PROFISSIONAL / VISÃO GERAL</p>
+            <h1>Planeje o próximo movimento.</h1>
+            <p>
+              Configure atividades de demonstração e acompanhe os parâmetros de
+              cada jogo.
+            </p>
+          </div>
+          <span class="badge">DEMONSTRAÇÃO LOCAL</span>
+        </header>
+        <div class="notice">
+          <strong>Ambiente de demonstração.</strong> Os planos são armazenados
+          apenas neste navegador. A autenticação, o Firebase e o envio ao jogo
+          ainda não estão conectados. Não insira dados reais.
+        </div>
+        <section class="metrics">
+          <article>
+            <span>ATIVIDADES</span><strong id="total">0</strong
+            ><small>salvas neste navegador</small>
+          </article>
+          <article>
+            <span>JOGOS DISPONÍVEIS</span><strong>02</strong
+            ><small>Semáforo e surfe</small>
+          </article>
+          <article>
+            <span>ARMAZENAMENTO</span><strong>Local</strong
+            ><small>neste dispositivo</small>
+          </article>
+        </section>
+        <div class="grid">
+          <section class="card" id="plano">
+            <p class="eyebrow">NOVA ATIVIDADE</p>
+            <h2>Configurar plano</h2>
+            <p class="sub">
+              Defina os parâmetros da atividade para um paciente fictício.
+            </p>
+            <form id="form">
+              <label
+                >Nome de demonstração<input
+                  name="displayName"
+                  required
+                  maxlength="80"
+                  placeholder="Ex.: Paciente demonstração" /></label
+              ><label
+                >Título da atividade<input
+                  name="title"
+                  required
+                  maxlength="100"
+                  value="Semáforo" /></label
+              ><label
+                >Jogo<select name="gameId" id="game">
+                  <option value="shoulder">Semáforo - dois braços</option>
+                  <option value="surfing">Surfe - inclinação do tronco</option>
+                </select></label
+              ><label id="side-wrap" hidden
+                >Lado voltado à câmera<select name="side">
+                  <option value="left">Esquerdo</option>
+                  <option value="right">Direito</option>
+                </select></label
+              >
+              <div class="two">
+                <label
+                  >Tempo total (s)<input
+                    name="duration"
+                    type="number"
+                    min="1"
+                    max="3600"
+                    value="60"
+                    required /></label
+                ><label
+                  >Meta mínima<input
+                    name="repetitions"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value="6"
+                    required /></label
+                ><label
+                  >Tempo por alvo (s)<input
+                    name="timeLimit"
+                    type="number"
+                    min="0.1"
+                    max="3600"
+                    step="0.1"
+                    value="6"
+                    required /></label
+                ><label
+                  >Permanência (s)<input
+                    name="hold"
+                    type="number"
+                    min="0"
+                    max="3600"
+                    step="0.1"
+                    value="0.7"
+                    required /></label
+                ><label
+                  >Tolerância (%)<input
+                    name="tolerance"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value="12"
+                    required /></label
+                ><label
+                  >Pontos por acerto<input
+                    name="points"
+                    type="number"
+                    min="0"
+                    max="1000"
+                    value="10"
+                    required
+                /></label>
+              </div>
+              <label id="targets-label"
+                >Alvos dos braços (esquerdo/direito, em %)<input
+                  name="targets"
+                  id="targets"
+                  value="50/50, 80/50, 50/80"
+                  required
+                /><small>Separe os pares por vírgulas.</small></label
+              >
+              <output id="message" aria-live="polite"></output>
+              <button type="submit">Salvar atividade <span>→</span></button>
+            </form>
+          </section>
+          <section class="card list-card" id="planos">
+            <p class="eyebrow">ACOMPANHAMENTO</p>
+            <h2>Atividades salvas</h2>
+            <p class="sub">Planos fictícios registrados neste navegador.</p>
+            <div id="plans"></div>
+          </section>
+        </div>
+        <footer>HomePhysio - Protótipo para desenvolvimento</footer>
+      </main>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
