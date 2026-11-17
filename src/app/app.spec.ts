@@ -18,6 +18,11 @@ describe('Painel profissional', () => {
       { provide: AuthState, useValue: auth },
       { provide: PatientApi, useValue: {
         list: async () => [patient],
+        listResults: async () => [{
+          id: 'session-1', title: 'Sessão de goleiro', gameId: 'goalkeeper', completedAtMs: 1780300800000, endReason: 'completed',
+          hits: 3, misses: 5, points: 30, activeMs: 21000, pausedMs: 2000,
+          movement: { shoulderRepetitions: { left: 5, right: 4 } },
+        }],
         prescribe: async (_: string, therapy: Therapy) => ({ ...patient, therapy, revision: 1, code: 'A'.repeat(6) }),
         rotate: async (p: Patient) => ({ ...p, revision: 2, code: 'B'.repeat(6) }),
       } },
@@ -51,6 +56,10 @@ describe('Painel profissional', () => {
     expect(el.querySelector<HTMLInputElement>('input#targetSeconds')?.value).toBe('1');
     expect(el.querySelector('#holdSeconds')).toBeNull();
     expect(el.querySelector('#durationSeconds')).toBeNull();
+    const history = el.querySelector('app-patient-history')!.textContent;
+    expect(history).toContain('3 defesas');
+    expect(history).toContain('5 gols sofridos');
+    expect(history).toContain('5 à esquerda, 4 à direita');
     const store = TestBed.inject(PatientStore);
     el.querySelector('#terapia form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();

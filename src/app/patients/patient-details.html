@@ -6,9 +6,7 @@
       <app-therapy-form />
       <div class="grid gap-4">
         <app-patient-access-card [code]="patient.code" />
-        <p-panel header="Histórico de sessões">
-          <p>Os resultados das sessões ficam no navegador usado pelo paciente.</p>
-        </p-panel>
+        <app-patient-history [patientId]="patient.id" />
       </div>
     </div>
   } @else if (store.detailLoading()) {

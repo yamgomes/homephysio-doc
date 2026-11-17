@@ -1,0 +1,25 @@
+<p-panel header="Histórico de sessões">
+  <p-button class="mb-3 block" label="Atualizar histórico" icon="pi pi-refresh" size="small"
+    severity="secondary" [disabled]="loading()" (onClick)="refresh()" />
+  @if (error()) {
+    <p-message severity="error">Não foi possível carregar o histórico.</p-message>
+  } @else {
+    <p-dataview [value]="reports()" [loading]="loading()" [paginator]="true"
+      [alwaysShowPaginator]="false" [rows]="5" emptyMessage="Nenhuma sessão recebida.">
+      <ng-template #list let-sessions>
+        <ul class="divide-y divide-[var(--p-content-border-color,#e2e8f0)]">
+          @for (session of sessions; track session.id) {
+            <li class="grid gap-1 py-3">
+              <strong>{{ session.title }}</strong>
+              <small>{{ session.gameId === 'goalkeeper' ? 'Goleiro' : 'Semáforo' }} · {{ date.format(session.completedAtMs) }} · {{ status(session.endReason) }}</small>
+              <p>{{ session.hits }} {{ session.gameId === 'goalkeeper' ? 'defesas' : 'acertos' }} ·
+                {{ session.misses }} {{ session.gameId === 'goalkeeper' ? 'gols sofridos' : 'erros' }} · {{ session.points }} pontos</p>
+              <p>Elevações do ombro · {{ session.movement.shoulderRepetitions.left }} à esquerda, {{ session.movement.shoulderRepetitions.right }} à direita</p>
+              <small>{{ seconds(session.activeMs) }} s ativos · {{ seconds(session.pausedMs) }} s em pausa</small>
+            </li>
+          }
+        </ul>
+      </ng-template>
+    </p-dataview>
+  }
+</p-panel>

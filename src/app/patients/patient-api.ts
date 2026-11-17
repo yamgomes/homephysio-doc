@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { createCode, validCode, validTherapy } from '@homephysio/contracts';
-import type { Patient, Therapy } from '@homephysio/contracts';
+import type { Patient, SessionReport, Therapy } from '@homephysio/contracts';
 
 @Injectable({ providedIn: 'root' })
 export class PatientApi {
@@ -23,6 +23,16 @@ export class PatientApi {
     const snapshot = await sdk.getDocFromServer(sdk.doc(db, 'professionals', uid, 'patients', id));
     return snapshot.exists() ? { ...snapshot.data(), id: snapshot.id } as Patient : null;
   }
+  async listResults(patientId: string): Promise<(SessionReport & { id: string })[]> {
+    const { uid, db, sdk } = await this.context();
+    const { collection, query, orderBy, limit, getDocsFromServer } = sdk;
+    const results = collection(db, 'professionals', uid, 'patients', patientId, 'results');
+    const snapshot = await getDocsFromServer(query(results, orderBy('completedAtMs', 'desc'), limit(100)));
+    return snapshot.docs.map(document => {
+      const { accessCode: _, ...report } = document.data();
+      return { ...report, id: document.id } as SessionReport & { id: string };
+    });
+  }
   async create(name: string): Promise<Patient> {
     name = name.trim();
     if (!name || name.length > 120) throw Error('Informe um nome de até 120 caracteres.');
@@ -39,32 +49,37 @@ export class PatientApi {
   async rotate(patient: Patient): Promise<Patient> { return this.change(patient.id, null, true, patient.revision); }
   private async change(patientId: string, therapy: Therapy | null, rotate: boolean, expectedRevision: number): Promise<Patient> {
     const { uid, db, sdk } = await this.context();
-    const { doc, runTransaction, serverTimestamp } = sdk; const reference = doc(db, 'professionals', uid, 'patients', patientId);
-    return runTransaction(db, async tx => {
-      const snapshot = await tx.get(reference);
-      if (!snapshot.exists()) throw Error('Paciente não encontrado.');
-      const previous = snapshot.data() as Omit<Patient, 'id'>;
-      if (previous.revision !== expectedRevision) throw Error('Este paciente foi alterado em outra aba. Atualize a lista antes de salvar.');
-      const nextTherapy = rotate ? previous.therapy : therapy;
-      if (!validTherapy(nextTherapy)) throw Error('Configure a terapia antes de gerar o código.');
-      let code = previous.code;
-      if (rotate || !validCode(code)) {
-        for (let attempt = 0; attempt < 8; attempt++) {
-          const candidate = createCode();
-          if (candidate === previous.code) continue;
-          if (!(await tx.get(doc(db, 'patientAccess', candidate))).exists()) {
-            code = candidate;
-            break;
+    const { doc, runTransaction, serverTimestamp } = sdk;
+    const reference = doc(db, 'professionals', uid, 'patients', patientId);
+    for (let attempt = 0; attempt < 8; attempt++) {
+      let issuing = false;
+      try {
+        return await runTransaction(db, async tx => {
+          const snapshot = await tx.get(reference);
+          if (!snapshot.exists()) throw Error('Paciente não encontrado.');
+          const previous = snapshot.data() as Omit<Patient, 'id'>;
+          if (previous.revision !== expectedRevision) throw Error('Este paciente foi alterado em outra aba. Atualize a lista antes de salvar.');
+          const nextTherapy = rotate ? previous.therapy : therapy;
+          if (!validTherapy(nextTherapy)) throw Error('Configure a terapia antes de gerar o código.');
+
+          issuing = rotate || !validCode(previous.code);
+          let code = previous.code;
+          if (issuing) {
+            do { code = createCode(); } while (code === previous.code);
+            tx.set(doc(db, 'issuedPatientCodes', code), { ownerId: uid, patientId });
+            if (previous.code) tx.set(doc(db, 'patientAccess', previous.code), { revoked: true });
           }
-        }
-        if (code === previous.code) throw Error('Não foi possível reservar um código. Tente novamente.');
+          const revision = previous.revision + 1;
+          tx.set(doc(db, 'patientAccess', code), { ownerId: uid, patientId, therapy: nextTherapy, revision });
+          tx.update(reference, { therapy: nextTherapy, code, revision, updatedAt: serverTimestamp() });
+          return { id: patientId, name: previous.name, code, therapy: nextTherapy, revision };
+        });
+      } catch (error) {
+        // Uma reserva existente só pode ser detectada pela recusa da transação.
+        if (!issuing || !(error instanceof Error) || !('code' in error) || error.code !== 'permission-denied') throw error;
       }
-      const revision = previous.revision + 1;
-      if (previous.code && previous.code !== code) tx.set(doc(db, 'patientAccess', previous.code), { revoked: true });
-      tx.set(doc(db, 'patientAccess', code), { ownerId: uid, patientId, therapy: nextTherapy, revision });
-      tx.update(reference, { therapy: nextTherapy, code, revision, updatedAt: serverTimestamp() });
-      return { id: patientId, name: previous.name, code, therapy: nextTherapy, revision };
-    });
+    }
+    throw Error('Não foi possível gerar um código. Tente novamente.');
   }
 }
 

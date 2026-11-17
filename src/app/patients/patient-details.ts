@@ -3,13 +3,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonDirective } from '@openng/optimus-ui/button';
 import { Message } from '@openng/optimus-ui/message';
-import { Panel } from '@openng/optimus-ui/panel';
 import { PatientAccessCard } from './patient-access-card';
 import { PatientStore } from './patient.store';
 import { TherapyForm } from './therapy-form';
+import { PatientHistory } from './patient-history';
 
 @Component({
-  imports: [RouterLink, ButtonDirective, Message, Panel, TherapyForm, PatientAccessCard],
+  imports: [RouterLink, ButtonDirective, Message, TherapyForm, PatientAccessCard, PatientHistory],
   templateUrl: './patient-details.html',
 })
 export class PatientDetails {
