@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "deploy": "gh-pages -d dist"
+    "predeploy": "npm run build -- --base-href /homephysio-doc/",
+    "deploy": "gh-pages -d dist/homephysio-modern/browser --nojekyll"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
