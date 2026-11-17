@@ -1,5 +1,4 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, getDocs, collection, query, where, limit } from 'firebase/firestore';
 import { getAuth, browserSessionPersistence, setPersistence, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
 
 // Configuração pública do aplicativo; a autorização depende das regras e do token.
@@ -10,7 +9,7 @@ const app = getApps()[0] ?? initializeApp({
 export const auth = getAuth(app);
 // Localiza os e-mails de verificação e recuperação enviados por este cliente.
 auth.languageCode = 'pt-BR';
-const db = getFirestore(app);
+
 const ready = setPersistence(auth, browserSessionPersistence);
 
 function accessError(code: string | undefined, error: unknown): string {
@@ -50,6 +49,12 @@ class HomephysioAccount extends HTMLElement {
       :is(input,button,summary):focus-visible{outline:3px solid #619b7a;outline-offset:3px}.actions{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}.password{display:flex;gap:8px}.password input{min-width:0}.password button{white-space:nowrap}
       #message:not(:empty){border-radius:8px;padding:12px;background:#edf6ef}#message[data-error=true]{background:#fff0ec;color:#8b3023}#verification{padding:16px;background:#fff8e8;border-radius:10px;margin:16px 0}
       details{margin-top:12px}summary{cursor:pointer;font-weight:600}#identity{margin-bottom:12px}.heading{display:flex;justify-content:space-between;gap:20px;align-items:start}[hidden]{display:none!important}
+      :host([compact]){margin:0}
+      :host([compact]) section:not(.guest){padding:0;border:0;background:transparent}
+      :host([compact]) section:not(.guest) .heading{align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}
+      :host([compact]) section:not(.guest) h2{display:none}
+      :host([compact]) section:not(.guest) #identity{margin:0;text-align:right}
+      #message:empty{margin:0}
       </style>
       <section class="guest"><div class="heading"><h2 id="title">Acesse sua conta</h2><button id="logout" hidden>Sair</button></div><p id="identity" class="muted">Verificando acesso…</p>
       <form hidden><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" required>
@@ -57,9 +62,7 @@ class HomephysioAccount extends HTMLElement {
       <div id="confirmation" hidden><label for="confirm-password">Confirme a senha</label><input id="confirm-password" name="confirmation" type="password" autocomplete="new-password"></div>
       <button class="primary" id="submit" type="submit">Entrar</button><div class="actions"><button class="link" type="button" id="register">Criar uma conta</button><button class="link" type="button" id="reset">Esqueci minha senha</button><button class="link" type="button" id="back" hidden>Voltar para entrar</button></div></form>
       <div id="signed" hidden><div id="verification"><strong>Confirme seu e-mail</strong><p>Abra o link de verificação enviado ao seu e-mail. Depois, volte aqui para confirmar. Verifique também a pasta de spam.</p><div class="actions"><button id="refresh">Já confirmei meu e-mail</button><button id="verify">Reenviar e-mail</button></div></div>
-      <details><summary>Vínculos de atendimento</summary><p id="account-id" class="muted"></p>
-      <div id="patient-link"><label>Identificador informado pelo seu fisioterapeuta<input id="professional-id" maxlength="128"></label><p>Ao confirmar, você autoriza o vínculo com essa conta. Confira o identificador diretamente com o profissional.</p><button id="link">Autorizar vínculo</button><button id="unlink">Revogar vínculo</button></div>
-      <button id="links">Consultar vínculos</button><p id="link-status"></p></details></div><p role="status" aria-live="polite" id="message" tabindex="-1"></p></section>`;
+      </div><p role="status" aria-live="polite" id="message" tabindex="-1"></p></section>`;
     const form = root.querySelector('form')!;
     const email = () => (form.elements.namedItem('email') as HTMLInputElement).value.trim();
     const password = () => (form.elements.namedItem('password') as HTMLInputElement).value;
@@ -100,26 +103,6 @@ class HomephysioAccount extends HTMLElement {
     root.querySelector('#logout')!.addEventListener('click', () => void run(() => signOut(auth)));
     root.querySelector('#verify')!.addEventListener('click', () => void run(async () => { if (auth.currentUser) await sendEmailVerification(auth.currentUser); }, 'Verificação solicitada. Confira seu e-mail.'));
     root.querySelector('#refresh')!.addEventListener('click', () => void run(async () => { await auth.currentUser?.reload(); await auth.currentUser?.getIdToken(true); if (!auth.currentUser?.emailVerified) throw new Error('Seu e-mail ainda não foi confirmado. Abra o link recebido e tente novamente.'); }, 'E-mail confirmado.'));
-    const user = () => { if (!auth.currentUser?.emailVerified) throw new Error('Verifique seu e-mail antes de gerenciar vínculos.'); return auth.currentUser; };
-    root.querySelector('#link')!.addEventListener('click', () => void run(async () => {
-      const current = user();
-      const professionalId = (root.querySelector('#professional-id') as HTMLInputElement).value.trim();
-      if (!/^[A-Za-z0-9_-]{1,128}$/.test(professionalId) || professionalId === current.uid) throw new Error('Identificador inválido.');
-      await setDoc(doc(db, 'careLinks', current.uid), { patientId: current.uid, professionalId, createdAt: serverTimestamp() });
-    }, 'Vínculo autorizado. Para trocar de profissional, revogue o vínculo atual primeiro.'));
-    root.querySelector('#unlink')!.addEventListener('click', () => void run(async () => { await deleteDoc(doc(db, 'careLinks', user().uid)); root.querySelector('#link-status')!.textContent = ''; }, 'Vínculo revogado.'));
-    root.querySelector('#links')!.addEventListener('click', () => void run(async () => {
-      const current = user();
-      if (this.getAttribute('audience') === 'professional') {
-        const links = await getDocs(query(collection(db, 'careLinks'), where('professionalId', '==', current.uid), limit(100)));
-        if (auth.currentUser?.uid !== current.uid) return;
-        root.querySelector('#link-status')!.textContent = links.empty ? 'Nenhum paciente vinculado.' : 'Pacientes que autorizaram o vínculo (até 100): ' + links.docs.map(d => d.id).join(', ');
-      } else {
-        const link = await getDoc(doc(db, 'careLinks', current.uid));
-        if (auth.currentUser?.uid !== current.uid) return;
-        root.querySelector('#link-status')!.textContent = link.exists() ? 'Profissional autorizado: ' + link.data()['professionalId'] : 'Nenhum vínculo autorizado.';
-      }
-    }));
     this.unsubscribe = onAuthStateChanged(auth, () => this.showUser());
     void ready.catch(() => { root.querySelector('#message')!.textContent = 'Não foi possível preparar o acesso neste navegador.'; });
   }
@@ -140,8 +123,6 @@ class HomephysioAccount extends HTMLElement {
     const root = this.shadowRoot!;
     const user = auth.currentUser;
     if (this.shownUid !== (user?.uid ?? null)) {
-      root.querySelector('#link-status')!.textContent = '';
-      (root.querySelector('#professional-id') as HTMLInputElement).value = '';
       this.shownUid = user?.uid ?? null;
       for (const name of ['password', 'confirmation']) (root.querySelector(`[name="${name}"]`) as HTMLInputElement).value = '';
       root.querySelector('#message')!.textContent = '';
@@ -167,13 +148,14 @@ class HomephysioAccount extends HTMLElement {
     (root.querySelector('#signed') as HTMLElement).hidden = !user;
     (root.querySelector('#verification') as HTMLElement).hidden = !!user?.emailVerified;
     (root.querySelector('#logout') as HTMLElement).hidden = !user;
-    (root.querySelector('details') as HTMLElement).hidden = !user?.emailVerified;
-    (root.querySelector('#patient-link') as HTMLElement).hidden = this.getAttribute('audience') === 'professional';
-    if (!user) root.querySelector('#link-status')!.textContent = '';
+    if (this.hasAttribute('compact')) {
+      const identity = root.querySelector('#identity')!;
+      const logout = root.querySelector('#logout')!;
+      if (user) logout.before(identity);
+      else root.querySelector('.heading')!.after(identity);
+    }
     root.querySelector('#identity')!.textContent = user ? `${user.email} · ${user.emailVerified ? 'E-mail verificado' : 'Verificação pendente'}` : register ? 'Cadastre seu e-mail e escolha uma senha. Você receberá um link para confirmar o cadastro.' : reset ? 'Informe seu e-mail para receber um link de recuperação.' : 'Entre com seu e-mail e senha para continuar.';
-    root.querySelector('#account-id')!.textContent = user ? `Seu identificador para vínculo: ${user.uid}` : '';
   }
   disconnectedCallback() { this.unsubscribe?.(); }
 }
 if (!customElements.get('homephysio-account')) customElements.define('homephysio-account', HomephysioAccount);
-

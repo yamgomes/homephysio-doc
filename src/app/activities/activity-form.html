@@ -1,0 +1,134 @@
+      <section class="card" id="atividade">
+        <div class="eyebrow">NOVA ATIVIDADE</div>
+        <h2>Preparar uma atividade</h2>
+        <p class="sub">Defina os objetivos e as condições da sessão.</p>
+        <form (ngSubmit)="save()">
+          <label for="displayName">Nome fictício do jogador</label
+          ><input
+            pInputText
+            id="displayName"
+            name="displayName"
+            [(ngModel)]="displayName"
+            required
+          />
+          <label for="title">Título da atividade</label
+          ><input
+            pInputText
+            id="title"
+            name="title"
+            [(ngModel)]="title"
+            required
+          />
+          <label for="game">Jogo</label
+          ><p-select
+            inputId="game"
+            name="game"
+            [options]="games"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="game"
+          />
+          @if (game === 'surfing') { <label for="side">Lado</label
+          ><p-select
+            inputId="side"
+            name="side"
+            [options]="sides"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="side"
+          />
+          <label for="targets"
+            >Alvos (%)
+            <small>Valores separados por vírgulas, por exemplo 30, 70.</small>
+          </label
+          ><input
+            pInputText
+            id="targets"
+            name="targets"
+            [(ngModel)]="targets"
+            required
+          />
+          } @else {
+            <p>O jogo sorteia os alvos dentro do alcance que o paciente calibrar para cada braço.</p>
+          }
+          <div class="two">
+            <div>
+              <label for="duration">Duração da sessão (s)</label
+              ><input
+                pInputText
+                id="duration"
+                name="duration"
+                type="number"
+                min="1"
+                max="3600"
+                [(ngModel)]="duration"
+              />
+            </div>
+            <div>
+              <label for="repetitions">Repetições mínimas</label
+              ><input
+                pInputText
+                id="repetitions"
+                name="repetitions"
+                type="number"
+                min="1"
+                [(ngModel)]="repetitions"
+              />
+            </div>
+            <div>
+              <label for="timeLimit">Tempo por alvo (s)</label
+              ><input
+                pInputText
+                id="timeLimit"
+                name="timeLimit"
+                type="number"
+                min="0.1"
+                step="0.1"
+                [(ngModel)]="timeLimit"
+              />
+            </div>
+            <div>
+              <label for="hold">Permanência no alvo (s)</label
+              ><input
+                pInputText
+                id="hold"
+                name="hold"
+                type="number"
+                min="0"
+                step="0.1"
+                [(ngModel)]="hold"
+              />
+            </div>
+            <div>
+              <label for="tolerance">Tolerância (%)</label
+              ><input
+                pInputText
+                id="tolerance"
+                name="tolerance"
+                type="number"
+                min="1"
+                max="50"
+                [(ngModel)]="tolerance"
+              />
+            </div>
+            <div>
+              <label for="points">Pontos por acerto</label
+              ><input
+                pInputText
+                id="points"
+                name="points"
+                type="number"
+                min="0"
+                [(ngModel)]="points"
+              />
+            </div>
+          </div>
+          <p-button
+            type="submit"
+            icon="pi pi-save"
+            label="Salvar atividade"
+            [disabled]="store.storageError()"
+          />
+          <p id="message" role="status" aria-live="polite">{{ store.message() }}</p>
+        </form>
+      </section>

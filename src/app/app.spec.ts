@@ -1,70 +1,66 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 import { AuthState } from './auth-state';
+import { PatientApi } from './patients/patient-api';
+import { PatientStore } from './patients/patient.store';
+import type { Patient, Therapy } from '@homephysio/contracts';
+import { defaultTherapy } from '@homephysio/contracts';
 
-describe('Acesso às atividades', () => {
-  let auth: { uid: ReturnType<typeof signal<string | null>>; ready: ReturnType<typeof signal<boolean>>; error: ReturnType<typeof signal<boolean>> };
-  const key = 'homephysio.professional.demo.v1';
-  const plan = (id: string) => ({ id, title: id, displayName: 'Exemplo', gameId: 'shoulder', config: { targets: [], repetitions: 1, sessionDurationMs: 60000 } });
-  beforeEach(async () => {
-    localStorage.clear();
-    auth = { uid: signal<string | null>(null), ready: signal(false), error: signal(false) };
-    await TestBed.configureTestingModule({ imports: [App], providers: [{ provide: AuthState, useValue: auth }] }).compileComponents();
-  });
-  it('não mostra atividades durante carregamento, sem login ou em falha', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('#atividade')).toBeNull();
-    expect(el.textContent).toContain('Verificando acesso');
-    auth.ready.set(true);
-    await fixture.whenStable();
-    expect(el.querySelector('#salvas')).toBeNull();
-    expect(el.textContent).toContain('Suas atividades ficam disponíveis');
-    auth.error.set(true);
-    await fixture.whenStable();
-    expect(el.querySelector('#atividade')).toBeNull();
-  });
-  it('isola contas e limpa a tela no logout', async () => {
-    localStorage.setItem(`${key}:alice`, JSON.stringify([plan('Plano Alice')]));
-    localStorage.setItem(`${key}:bob`, JSON.stringify([plan('Plano Bob')]));
+describe('Painel profissional', () => {
+  it('carrega pacientes ao entrar e deixa a terapia e o código na página do paciente', async () => {
+    const auth = { uid: signal<string | null>(null), emailVerified: signal(false), ready: signal(true), error: signal(false) };
+    const patient: Patient = { id: 'p1', name: 'Paciente fictício', code: '', therapy: defaultTherapy('goalkeeper'), revision: 0 };
+    await TestBed.configureTestingModule({ imports: [App], providers: [
+      provideRouter(routes),
+      { provide: AuthState, useValue: auth },
+      { provide: PatientApi, useValue: {
+        list: async () => [patient],
+        prescribe: async (_: string, therapy: Therapy) => ({ ...patient, therapy, revision: 1, code: 'A'.repeat(6) }),
+        rotate: async (p: Patient) => ({ ...p, revision: 2, code: 'B'.repeat(6) }),
+      } },
+    ] }).compileComponents();
     const fixture = TestBed.createComponent(App);
     const el = fixture.nativeElement as HTMLElement;
-    auth.uid.set('alice'); auth.ready.set(true);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/pacientes');
     await fixture.whenStable();
-    expect(el.querySelector('#salvas')?.textContent).toContain('Plano Alice');
-    auth.uid.set('bob');
+    expect(el.querySelector('#pacientes')).toBeNull();
+    auth.uid.set('owner');
+    auth.emailVerified.set(true);
     await fixture.whenStable();
-    expect(el.querySelector('#salvas')?.textContent).toContain('Plano Bob');
-    expect(el.textContent).not.toContain('Plano Alice');
+    expect(el.querySelector('#pacientes li')?.textContent).toContain(patient.name);
+    expect(el.querySelector('#patient-name')).toBeNull();
+    const add = [...el.querySelectorAll<HTMLButtonElement>('#pacientes button')]
+      .find(button => button.textContent?.includes('Adicionar paciente'));
+    add!.click();
+    await fixture.whenStable();
+    expect(el.querySelector('#patient-name')).not.toBeNull();
+    const cancel = [...el.querySelectorAll<HTMLButtonElement>('app-patient-create-dialog button')]
+      .find(button => button.textContent?.includes('Cancelar'));
+    cancel!.click();
+    await fixture.whenStable();
+    expect(el.querySelector('#terapia')).toBeNull();
+    el.querySelector<HTMLAnchorElement>('#pacientes li a')!.click();
+    await fixture.whenStable();
+    expect(router.url).toBe('/pacientes/p1');
+    expect(el.querySelector('#pacientes')).toBeNull();
+    expect(el.querySelector('label[for="targetSeconds"]')?.textContent).toContain('Tempo de voo da bola');
+    expect(el.querySelector<HTMLInputElement>('input#targetSeconds')?.value).toBe('1');
+    expect(el.querySelector('#holdSeconds')).toBeNull();
+    expect(el.querySelector('#durationSeconds')).toBeNull();
+    const store = TestBed.inject(PatientStore);
+    el.querySelector('#terapia form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+    expect(el.querySelector('code')?.textContent).toContain('AAAAAA');
+    await store.rotate();
+    await fixture.whenStable();
+    expect(el.querySelector('code')?.textContent).toContain('BBBBBB');
     auth.uid.set(null);
     await fixture.whenStable();
-    expect(el.querySelector('#salvas')).toBeNull();
-    expect(el.querySelector('#displayName')).toBeNull();
-  });
-  it('preserva os registros antigos sem atribuí-los à primeira conta', async () => {
-    const legacy = JSON.stringify([plan('Plano legado')]);
-    localStorage.setItem(key, legacy);
-    auth.uid.set('alice'); auth.ready.set(true);
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    expect(fixture.nativeElement.textContent).not.toContain('Plano legado');
-    expect(localStorage.getItem(key)).toBe(legacy);
-  });
-  it('salva somente no espaço da conta conectada', async () => {
-    auth.uid.set('alice'); auth.ready.set(true);
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    const input = el.querySelector('#displayName') as HTMLInputElement;
-    input.value = 'Demonstração'; input.dispatchEvent(new Event('input'));
-    await fixture.whenStable();
-    el.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await fixture.whenStable();
-    expect(JSON.parse(localStorage.getItem(`${key}:alice`)!).length).toBe(1);
-    expect(localStorage.getItem(key)).toBeNull();
-    expect(localStorage.getItem(`${key}:bob`)).toBeNull();
+    expect(el.querySelector('code')).toBeNull();
   });
 });
 

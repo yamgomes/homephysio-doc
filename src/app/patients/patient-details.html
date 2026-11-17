@@ -1,0 +1,21 @@
+<section id="patient-details">
+  <a pButton [text]="true" severity="secondary" icon="pi pi-arrow-left" routerLink="/pacientes">Voltar aos pacientes</a>
+  @if (store.selected(); as patient) {
+    <h1 class="mt-3 mb-4 text-2xl font-semibold">{{ patient.name }}</h1>
+    <div class="grid items-start gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <app-therapy-form />
+      <div class="grid gap-4">
+        <app-patient-access-card [code]="patient.code" />
+        <p-panel header="Histórico de sessões">
+          <p>Os resultados das sessões ficam no navegador usado pelo paciente.</p>
+        </p-panel>
+      </div>
+    </div>
+  } @else if (store.detailLoading()) {
+    <p-message class="mt-3 block" severity="info">Carregando paciente…</p-message>
+  } @else {
+    <p-message class="mt-3 block" [severity]="store.detailError() ? 'error' : 'info'">
+      {{ store.detailError() || 'Paciente não encontrado.' }}
+    </p-message>
+  }
+</section>

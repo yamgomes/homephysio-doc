@@ -1,0 +1,3 @@
+form > input, form > p-select, .two input { margin-bottom: 15px; }
+:host ::ng-deep .p-select { width: 100%; }
+label { margin-bottom: 0; }

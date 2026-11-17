@@ -1,0 +1,26 @@
+      <section class="card" id="salvas">
+        <div class="eyebrow">NESTE NAVEGADOR</div>
+        <h2>Atividades salvas</h2>
+        <p class="sub">
+          {{ store.plans().length }} atividade(s) armazenada(s) localmente.
+        </p>
+        @if (store.plans().length === 0) {
+        <div class="empty">As atividades salvas aparecerão aqui.</div>
+        } @for (plan of store.plans().slice().reverse(); track plan.id) {
+        <article class="plan">
+          <span class="pill"
+            >{{ plan.gameId === 'shoulder' ? 'SEMÁFORO' : 'SURFE' }}</span
+          >
+          <h3>{{ plan.title }}</h3>
+          <p>{{ plan.displayName }}</p>
+          <small
+            >{{ plan.config.repetitions }} repetições · {{
+            plan.config.sessionDurationMs / 1000 }} s</small
+          ><p-button
+            label="Exportar JSON"
+            severity="secondary"
+            (onClick)="store.download(plan)"
+          />
+        </article>
+        }
+      </section>
