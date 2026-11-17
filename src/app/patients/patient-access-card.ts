@@ -1,15 +1,16 @@
-import { Component, inject, input, signal } from '@angular/core';
-import { ConfirmationService } from '@openng/optimus-ui/api';
+import { Component, inject, input } from '@angular/core';
+import { ConfirmationService, MessageService } from '@openng/optimus-ui/api';
 import { Button } from '@openng/optimus-ui/button';
 import { ConfirmDialog } from '@openng/optimus-ui/confirmdialog';
 import { Panel } from '@openng/optimus-ui/panel';
+import { Toast } from '@openng/optimus-ui/toast';
 import { displayCode } from '@homephysio/contracts';
 import { PatientStore } from './patient.store';
 
 @Component({
   selector: 'app-patient-access-card',
-  imports: [Button, ConfirmDialog, Panel],
-  providers: [ConfirmationService],
+  imports: [Button, ConfirmDialog, Panel, Toast],
+  providers: [ConfirmationService, MessageService],
   template: `
     <p-panel header="Código de acesso">
       @if (code(); as accessCode) {
@@ -19,15 +20,13 @@ import { PatientStore } from './patient.store';
             (onClick)="copyCode()" />
         </div>
         <p class="my-3">Compartilhe o código com o paciente para que ele abra a terapia.</p>
-        @if (copyFeedback(); as feedback) {
-          <p class="mt-2" role="status" aria-live="polite">{{ feedback }}</p>
-        }
         <p-button label="Gerar novo código" icon="pi pi-key" severity="secondary"
           (onClick)="confirmRotation()" [disabled]="store.busy()" />
       } @else {
         <p>Salve a terapia para gerar o código de acesso.</p>
       }
     </p-panel>
+    <p-toast position="bottom-right" [breakpoints]="{'480px': { width: 'calc(100% - 2rem)', right: '1rem' }}" />
     <p-confirmdialog acceptLabel="Gerar novo código" rejectLabel="Cancelar" defaultFocus="reject" />
   `,
 })
@@ -35,15 +34,22 @@ export class PatientAccessCard {
   readonly code = input.required<string>();
   protected readonly store = inject(PatientStore);
   protected readonly displayCode = displayCode;
-  protected readonly copyFeedback = signal('');
   private readonly confirmation = inject(ConfirmationService);
+  private readonly messages = inject(MessageService);
 
   protected async copyCode() {
     try {
       await navigator.clipboard.writeText(this.code());
-      this.copyFeedback.set('Código copiado.');
+      this.messages.clear();
+      this.messages.add({ severity: 'success', summary: 'Código copiado.', life: 4000 });
     } catch {
-      this.copyFeedback.set('Não foi possível copiar. Selecione o código e copie manualmente.');
+      this.messages.clear();
+      this.messages.add({
+        severity: 'error',
+        summary: 'Não foi possível copiar.',
+        detail: 'Selecione o código e copie manualmente.',
+        life: 8000,
+      });
     }
   }
 
