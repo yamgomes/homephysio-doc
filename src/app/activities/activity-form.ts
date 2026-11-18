@@ -26,9 +26,12 @@ export class ActivityForm {
   protected hold = 0.7;
   protected tolerance = 12;
   protected points = 10;
+  protected sets = 3;
+  protected rest = 30;
   protected readonly games = [
     { label: "Semáforo · dois braços", value: "shoulder" },
     { label: "Surfe · inclinação do tronco", value: "surfing" },
+    { label: "Elevação de ombros convencional", value: "shoulderElevation" },
   ];
   protected readonly sides = [
     { label: "Esquerdo", value: "left" },
@@ -48,8 +51,14 @@ export class ActivityForm {
       this.hold = 0.7;
       this.tolerance = 12;
       this.points = 10;
+      this.sets = 3;
+      this.rest = 30;
       this.changeDetector.markForCheck();
     });
+  }
+  protected gameChanged(game: Game): void {
+    this.game = game;
+    this.title = game === "shoulderElevation" ? "Elevação de ombros convencional" : game === "surfing" ? "Surfe" : "Semáforo";
   }
   protected save(): void {
     const uid = this.store.currentUid();
@@ -80,7 +89,7 @@ export class ActivityForm {
         this.timeLimit <= 0 ||
         this.timeLimit > 3600 ||
         this.hold < 0 ||
-        this.hold > this.timeLimit ||
+        (this.game !== 'shoulderElevation' && this.hold > this.timeLimit) ||
         this.tolerance < 1 ||
         this.tolerance > 50 ||
         !Number.isInteger(this.points) ||
@@ -90,12 +99,18 @@ export class ActivityForm {
         throw Error("Confira os limites e a permanência no alvo.");
       const config: Plan["config"] = {
         repetitions: this.repetitions,
-        holdMs: this.hold * 1000,
+        holdMs: (this.game === "shoulderElevation" ? this.timeLimit : this.hold) * 1000,
         timeLimitMs: this.timeLimit * 1000,
         tolerance: this.tolerance / 100,
-        sessionDurationMs: this.duration * 1000,
         pointsPerHit: this.points,
       };
+      if (this.game !== "shoulderElevation") config.sessionDurationMs = this.duration * 1000;
+      if (this.game === "shoulderElevation") {
+        if (!Number.isInteger(this.sets) || this.sets < 1 || this.sets > 100 || !Number.isFinite(this.rest) || this.rest < 0 || this.rest > 3600)
+          throw Error("Confira o número de séries e o tempo de descanso.");
+        config.sets = this.sets;
+        config.restMs = this.rest * 1000;
+      }
       if (this.game === "surfing") {
         const entries = this.targets.split(",").map((entry) => entry.trim());
         if (entries.length > 1000) throw Error("Informe até 1000 alvos.");

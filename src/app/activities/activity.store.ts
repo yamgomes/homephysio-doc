@@ -39,10 +39,12 @@ export class ActivityStore {
       typeof p.id === "string" &&
       typeof p.title === "string" &&
       typeof p.displayName === "string" &&
-      (p.gameId === "shoulder" || p.gameId === "surfing") &&
+      (p.gameId === "shoulder" || p.gameId === "surfing" || p.gameId === "shoulderElevation") &&
       !!p.config &&
-      (Array.isArray(p.config.targets) ||
-        (p.gameId === 'shoulder' && p.config.targets === undefined))
+      (p.gameId === 'shoulderElevation'
+        ? Number.isInteger(p.config.sets) && Number.isFinite(p.config.restMs)
+        : Array.isArray(p.config.targets) ||
+          (p.gameId === 'shoulder' && p.config.targets === undefined))
     );
   }
   download(plan: Plan): void {

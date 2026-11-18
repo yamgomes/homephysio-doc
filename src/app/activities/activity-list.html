@@ -9,13 +9,12 @@
         } @for (plan of store.plans().slice().reverse(); track plan.id) {
         <article class="plan">
           <span class="pill"
-            >{{ plan.gameId === 'shoulder' ? 'SEMÁFORO' : 'SURFE' }}</span
+            >{{ plan.gameId === 'shoulder' ? 'SEMÁFORO' : plan.gameId === 'surfing' ? 'SURFE' : 'ELEVAÇÃO DE OMBROS' }}</span
           >
           <h3>{{ plan.title }}</h3>
           <p>{{ plan.displayName }}</p>
           <small
-            >{{ plan.config.repetitions }} repetições · {{
-            plan.config.sessionDurationMs / 1000 }} s</small
+            >{{ plan.config.repetitions }} repetições · {{ plan.config.sessionDurationMs ? plan.config.sessionDurationMs / 1000 + ' s' : (plan.config.sets || 1) + ' séries · descanso ' + ((plan.config.restMs || 0) / 1000) + ' s' }}</small
           ><p-button
             label="Exportar JSON"
             severity="secondary"

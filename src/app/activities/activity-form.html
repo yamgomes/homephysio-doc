@@ -26,7 +26,8 @@
             [options]="games"
             optionLabel="label"
             optionValue="value"
-            [(ngModel)]="game"
+            [ngModel]="game"
+            (ngModelChange)="gameChanged($event)"
           />
           @if (game === 'surfing') { <label for="side">Lado</label
           ><p-select
@@ -48,10 +49,13 @@
             [(ngModel)]="targets"
             required
           />
-          } @else {
+          } @else if (game === 'shoulder') {
             <p>O jogo sorteia os alvos dentro do alcance que o paciente calibrar para cada braço.</p>
+          } @else {
+            <p>O paciente eleva os dois braços juntos, mantém pelo tempo mínimo e retorna à posição inicial.</p>
           }
           <div class="two">
+            @if (game !== 'shoulderElevation') {
             <div>
               <label for="duration">Duração da sessão (s)</label
               ><input
@@ -64,8 +68,9 @@
                 [(ngModel)]="duration"
               />
             </div>
+            }
             <div>
-              <label for="repetitions">Repetições mínimas</label
+              <label for="repetitions">{{ game === 'shoulderElevation' ? 'Repetições por série' : 'Repetições mínimas' }}</label
               ><input
                 pInputText
                 id="repetitions"
@@ -76,7 +81,7 @@
               />
             </div>
             <div>
-              <label for="timeLimit">Tempo por alvo (s)</label
+              <label for="timeLimit">{{ game === 'shoulderElevation' ? 'Tempo mínimo no alto (s)' : 'Tempo por alvo (s)' }}</label
               ><input
                 pInputText
                 id="timeLimit"
@@ -87,6 +92,11 @@
                 [(ngModel)]="timeLimit"
               />
             </div>
+            @if (game === 'shoulderElevation') {
+              <div><label for="sets">Número de séries</label><input pInputText id="sets" name="sets" type="number" min="1" max="100" [(ngModel)]="sets" /></div>
+              <div><label for="rest">Descanso entre séries (s)</label><input pInputText id="rest" name="rest" type="number" min="0" max="3600" [(ngModel)]="rest" /></div>
+            }
+            @if (game !== 'shoulderElevation') {
             <div>
               <label for="hold">Permanência no alvo (s)</label
               ><input
@@ -99,6 +109,8 @@
                 [(ngModel)]="hold"
               />
             </div>
+            }
+            @if (game !== 'shoulderElevation') {
             <div>
               <label for="tolerance">Tolerância (%)</label
               ><input
@@ -122,6 +134,7 @@
                 [(ngModel)]="points"
               />
             </div>
+            }
           </div>
           <p-button
             type="submit"

@@ -1,4 +1,4 @@
-export type Game = "shoulder" | "surfing";
+export type Game = "shoulder" | "surfing" | "shoulderElevation";
 export type Side = "left" | "right";
 export type Level = number | { left: number; right: number };
 export interface Plan {
@@ -14,8 +14,10 @@ export interface Plan {
     holdMs: number;
     timeLimitMs: number;
     tolerance: number;
-    sessionDurationMs: number;
+    sessionDurationMs?: number;
     pointsPerHit: number;
     side?: Side;
+    sets?: number;
+    restMs?: number;
   };
 }
