@@ -18,8 +18,10 @@ import { PatientStore } from './patient.store';
           <code class="text-xl">{{ displayCode(accessCode) }}</code>
           <p-button label="Copiar código" icon="pi pi-copy" severity="secondary"
             (onClick)="copyCode()" />
+          <p-button label="Copiar link para o paciente" icon="pi pi-link" severity="secondary"
+            (onClick)="copyLink()" />
         </div>
-        <p class="my-3">Compartilhe o código com o paciente para que ele abra a terapia.</p>
+        <p class="my-3">Compartilhe o link para abrir a terapia diretamente ou envie o código.</p>
         <p-button label="Gerar novo código" icon="pi pi-key" severity="secondary"
           (onClick)="confirmRotation()" [disabled]="store.busy()" />
       } @else {
@@ -49,6 +51,24 @@ export class PatientAccessCard {
         summary: 'Não foi possível copiar.',
         detail: 'Selecione o código e copie manualmente.',
         life: 8000,
+      });
+    }
+  }
+
+  protected async copyLink() {
+    const url = new URL('https://yamgomes.github.io/virtualter-3/');
+    url.searchParams.set('code', this.code());
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      this.messages.clear();
+      this.messages.add({ severity: 'success', summary: 'Link copiado.', detail: 'O paciente abrirá a terapia diretamente pelo link.', life: 4000 });
+    } catch {
+      this.messages.clear();
+      this.messages.add({
+        severity: 'error',
+        summary: 'Não foi possível copiar o link.',
+        detail: url.toString(),
+        life: 10000,
       });
     }
   }
