@@ -2,27 +2,51 @@
   <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
     <h1 class="text-2xl font-semibold">Pacientes</h1>
     <div class="flex flex-wrap items-center gap-3">
-      <p-button label="Atualizar" icon="pi pi-refresh" severity="secondary"
-        (onClick)="store.refresh()" [loading]="store.busy()" />
-      <p-button label="Adicionar paciente" icon="pi pi-user-plus"
-        (onClick)="adding.set(true)" [disabled]="store.busy()" />
+      <p-button
+        label="Atualizar"
+        icon="pi pi-refresh"
+        severity="secondary"
+        (onClick)="store.refresh()"
+        [loading]="store.busy()"
+      />
+      <p-button
+        label="Adicionar paciente"
+        icon="pi pi-user-plus"
+        (onClick)="adding.set(true)"
+        [disabled]="store.busy()"
+      />
     </div>
   </div>
 
-  <app-patient-create-dialog [(visible)]="adding" (created)="openPatient($event)" />
+  <app-patient-create-dialog
+    [(visible)]="adding"
+    (created)="openPatient($event)"
+  />
 
-  <p-dataview [value]="store.patients()" [loading]="store.busy()"
-    [paginator]="true" [alwaysShowPaginator]="false" [rows]="10"
-    [emptyMessage]="store.listLoaded() ? 'Nenhum paciente cadastrado.' : 'Não foi possível carregar a lista.'">
+  <p-dataview
+    [value]="store.patients()"
+    [loading]="store.busy()"
+    [paginator]="true"
+    [alwaysShowPaginator]="false"
+    [rows]="10"
+    [emptyMessage]="store.listLoaded() ? 'Nenhum paciente cadastrado.' : 'Não foi possível carregar a lista.'"
+  >
     <ng-template #list let-patients>
       <ul class="divide-y divide-[var(--p-content-border-color,#e2e8f0)]">
         @for (patient of patients; track patient.id) {
-          <li class="flex flex-wrap items-center gap-2 px-3 py-1.5">
-            <a pButton [routerLink]="['/pacientes', patient.id]" [text]="true" severity="secondary">
-              {{ patient.name }}
-            </a>
-            <small class="text-[color:var(--p-text-muted-color,#64748b)]">{{ patient.therapy?.title || 'Sem terapia' }}</small>
-          </li>
+        <li class="flex flex-wrap items-center gap-2 px-3 py-1.5">
+          <a
+            pButton
+            [routerLink]="['/pacientes', patient.id]"
+            [text]="true"
+            severity="secondary"
+          >
+            {{ patient.name }}
+          </a>
+          <small class="text-[color:var(--p-text-muted-color,#64748b)]"
+            >{{ patient.therapy?.title || 'Sem terapia' }}</small
+          >
+        </li>
         }
       </ul>
     </ng-template>

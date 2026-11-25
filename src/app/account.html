@@ -1,101 +1,161 @@
-@let user = auth.user();
-@let pending = auth.pending();
-@let modeValue = mode();
+@let user = auth.user(); @let pending = auth.pending(); @let modeValue = mode();
 @let message = auth.message();
 
 <section [class.guest]="!user">
   @if (user) {
-    <div class="heading">
-      <h2 id="title">Sua conta</h2>
-      <p class="identity muted">
-        {{ user.email }} · {{ user.emailVerified ? 'E-mail verificado' : 'Verificação pendente' }}
-      </p>
-      <button id="logout" type="button" [disabled]="pending" (click)="logout()">Sair</button>
+  <div class="heading">
+    <h2 id="title">Sua conta</h2>
+    <p class="identity muted">
+      {{ user.email }} · {{ user.emailVerified ? 'E-mail verificado' :
+      'Verificação pendente' }}
+    </p>
+    <button id="logout" type="button" [disabled]="pending" (click)="logout()">
+      Sair
+    </button>
+  </div>
+
+  @if (!user.emailVerified) {
+  <div id="verification">
+    <strong>Confirme seu e-mail</strong>
+    <p>
+      Abra o link de verificação enviado ao seu e-mail. Depois, volte aqui para
+      confirmar. Verifique também a pasta de spam.
+    </p>
+    <div class="actions">
+      <button
+        id="refresh"
+        type="button"
+        [disabled]="pending"
+        (click)="refreshVerification()"
+      >
+        Já confirmei meu e-mail
+      </button>
+      <button
+        id="verify"
+        type="button"
+        [disabled]="pending"
+        (click)="resendVerification()"
+      >
+        Reenviar e-mail
+      </button>
     </div>
+  </div>
+  } } @else { @switch (modeValue) { @case ('register') {
+  <h2 id="title">Crie sua conta</h2>
+  <p class="identity muted">
+    Cadastre seu e-mail e escolha uma senha. Você receberá um link para
+    confirmar o cadastro.
+  </p>
+  } @case ('reset') {
+  <h2 id="title">Recupere sua senha</h2>
+  <p class="identity muted">
+    Informe seu e-mail para receber um link de recuperação.
+  </p>
+  } @default {
+  <h2 id="title">Acesse sua conta</h2>
+  <p class="identity muted">
+    @if (auth.error()) { Não foi possível verificar seu acesso. } @else if
+    (auth.ready()) { Entre com seu e-mail e senha para continuar. } @else {
+    Verificando acesso… }
+  </p>
+  } } @if (auth.ready() && !auth.error()) {
+  <form #form [attr.aria-busy]="pending" (submit)="submit($event, form)">
+    <label for="email">E-mail</label>
+    <input
+      #emailField
+      id="email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      autocapitalize="none"
+      spellcheck="false"
+      required
+    />
 
-    @if (!user.emailVerified) {
-      <div id="verification">
-        <strong>Confirme seu e-mail</strong>
-        <p>
-          Abra o link de verificação enviado ao seu e-mail. Depois, volte aqui para confirmar.
-          Verifique também a pasta de spam.
-        </p>
-        <div class="actions">
-          <button id="refresh" type="button" [disabled]="pending" (click)="refreshVerification()">
-            Já confirmei meu e-mail
-          </button>
-          <button id="verify" type="button" [disabled]="pending" (click)="resendVerification()">
-            Reenviar e-mail
-          </button>
-        </div>
-      </div>
+    @if (modeValue !== 'reset') {
+    <label for="password">Senha</label>
+    <div class="password">
+      <input
+        id="password"
+        name="password"
+        [type]="passwordVisible() ? 'text' : 'password'"
+        [autocomplete]="modeValue === 'register' ? 'new-password' : 'current-password'"
+        [attr.minlength]="modeValue === 'register' ? 8 : null"
+        [attr.aria-describedby]="modeValue === 'register' ? 'password-hint' : null"
+        required
+      />
+      <button
+        type="button"
+        id="toggle-password"
+        aria-label="Mostrar senha"
+        [attr.aria-pressed]="passwordVisible()"
+        [disabled]="pending"
+        (click)="passwordVisible.set(!passwordVisible())"
+      >
+        {{ passwordVisible() ? 'Ocultar' : 'Mostrar' }}
+      </button>
+    </div>
+    } @if (modeValue === 'register') {
+    <small id="password-hint" class="muted">Use pelo menos 8 caracteres.</small>
+    <label for="confirm-password">Confirme a senha</label>
+    <input
+      #confirmationField
+      id="confirm-password"
+      name="confirmation"
+      type="password"
+      autocomplete="new-password"
+      required
+    />
     }
-  } @else {
-    @switch (modeValue) {
-      @case ('register') {
-        <h2 id="title">Crie sua conta</h2>
-        <p class="identity muted">Cadastre seu e-mail e escolha uma senha. Você receberá um link para confirmar o cadastro.</p>
+
+    <button class="primary" id="submit" type="submit" [disabled]="pending">
+      {{ modeValue === 'register' ? 'Criar conta' : modeValue === 'reset' ?
+      'Enviar link de recuperação' : 'Entrar' }}
+    </button>
+    <div class="actions">
+      @if (modeValue === 'login') {
+      <button
+        class="link"
+        type="button"
+        id="register"
+        [disabled]="pending"
+        (click)="setMode('register')"
+      >
+        Criar uma conta
+      </button>
+      <button
+        class="link"
+        type="button"
+        id="reset"
+        [disabled]="pending"
+        (click)="setMode('reset')"
+      >
+        Esqueci minha senha
+      </button>
+      } @else {
+      <button
+        class="link"
+        type="button"
+        id="back"
+        [disabled]="pending"
+        (click)="setMode('login')"
+      >
+        Voltar para entrar
+      </button>
       }
-      @case ('reset') {
-        <h2 id="title">Recupere sua senha</h2>
-        <p class="identity muted">Informe seu e-mail para receber um link de recuperação.</p>
-      }
-      @default {
-        <h2 id="title">Acesse sua conta</h2>
-        <p class="identity muted">
-          @if (auth.error()) {
-            Não foi possível verificar seu acesso.
-          } @else if (auth.ready()) {
-            Entre com seu e-mail e senha para continuar.
-          } @else {
-            Verificando acesso…
-          }
-        </p>
-      }
-    }
+    </div>
+  </form>
+  } }
 
-    @if (auth.ready() && !auth.error()) {
-      <form #form [attr.aria-busy]="pending" (submit)="submit($event, form)">
-        <label for="email">E-mail</label>
-        <input #emailField id="email" name="email" type="email" autocomplete="email"
-          autocapitalize="none" spellcheck="false" required>
-
-        @if (modeValue !== 'reset') {
-          <label for="password">Senha</label>
-          <div class="password">
-            <input id="password" name="password" [type]="passwordVisible() ? 'text' : 'password'"
-              [autocomplete]="modeValue === 'register' ? 'new-password' : 'current-password'"
-              [attr.minlength]="modeValue === 'register' ? 8 : null"
-              [attr.aria-describedby]="modeValue === 'register' ? 'password-hint' : null" required>
-            <button type="button" id="toggle-password" aria-label="Mostrar senha"
-              [attr.aria-pressed]="passwordVisible()" [disabled]="pending"
-              (click)="passwordVisible.set(!passwordVisible())">{{ passwordVisible() ? 'Ocultar' : 'Mostrar' }}</button>
-          </div>
-        }
-
-        @if (modeValue === 'register') {
-          <small id="password-hint" class="muted">Use pelo menos 8 caracteres.</small>
-          <label for="confirm-password">Confirme a senha</label>
-          <input #confirmationField id="confirm-password" name="confirmation" type="password"
-            autocomplete="new-password" required>
-        }
-
-        <button class="primary" id="submit" type="submit" [disabled]="pending">
-          {{ modeValue === 'register' ? 'Criar conta' : modeValue === 'reset' ? 'Enviar link de recuperação' : 'Entrar' }}
-        </button>
-        <div class="actions">
-          @if (modeValue === 'login') {
-            <button class="link" type="button" id="register" [disabled]="pending" (click)="setMode('register')">Criar uma conta</button>
-            <button class="link" type="button" id="reset" [disabled]="pending" (click)="setMode('reset')">Esqueci minha senha</button>
-          } @else {
-            <button class="link" type="button" id="back" [disabled]="pending" (click)="setMode('login')">Voltar para entrar</button>
-          }
-        </div>
-      </form>
-    }
-  }
-
-  <p #status role="status" aria-live="polite" id="message" tabindex="-1"
+  <p
+    #status
+    role="status"
+    aria-live="polite"
+    id="message"
+    tabindex="-1"
     [class.has-message]="confirmationError() || message"
-    [class.error]="confirmationError() || message?.error">{{ confirmationError() ? 'As senhas precisam ser iguais.' : message?.text }}</p>
+    [class.error]="confirmationError() || message?.error"
+  >
+    {{ confirmationError() ? 'As senhas precisam ser iguais.' : message?.text }}
+  </p>
 </section>

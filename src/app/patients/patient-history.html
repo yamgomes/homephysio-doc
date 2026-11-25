@@ -1,25 +1,44 @@
 <p-panel header="Histórico de sessões">
-  <p-button class="mb-3 block" label="Atualizar histórico" icon="pi pi-refresh" size="small"
-    severity="secondary" [disabled]="loading()" (onClick)="refresh()" />
+  <p-button
+    class="mb-3 block"
+    label="Atualizar histórico"
+    icon="pi pi-refresh"
+    size="small"
+    severity="secondary"
+    [disabled]="loading()"
+    (onClick)="refresh()"
+  />
   @if (error()) {
-    <p-message severity="error">Não foi possível carregar o histórico.</p-message>
+  <p-message severity="error">Não foi possível carregar o histórico.</p-message>
   } @else {
-    <p-dataview [value]="reports()" [loading]="loading()" [paginator]="true"
-      [alwaysShowPaginator]="false" [rows]="5" emptyMessage="Nenhuma sessão recebida.">
-      <ng-template #list let-sessions>
-        <ul class="divide-y divide-[var(--p-content-border-color,#e2e8f0)]">
-          @for (session of sessions; track session.id) {
-            <li class="grid gap-1 py-3">
-              <strong>{{ session.title }}</strong>
-              <small>{{ gameLabel(session) }} · {{ date.format(session.completedAtMs) }} · {{ status(session.endReason) }}</small>
-              @for (line of reportLines(session); track $index) {
-                <p>{{ line }}</p>
-              }
-              <small>{{ seconds(session.activeMs) }} s ativos · {{ seconds(session.pausedMs) }} s em pausa</small>
-            </li>
+  <p-dataview
+    [value]="reports()"
+    [loading]="loading()"
+    [paginator]="true"
+    [alwaysShowPaginator]="false"
+    [rows]="5"
+    emptyMessage="Nenhuma sessão recebida."
+  >
+    <ng-template #list let-sessions>
+      <ul class="divide-y divide-(--p-content-border-color,#e2e8f0)">
+        @for (session of sessions; track session.id) {
+        <li class="grid gap-1 py-3">
+          <strong>{{ session.title }}</strong>
+          <small
+            >{{ gameLabel(session) }} · {{ date.format(session.completedAtMs) }}
+            · {{ status(session.endReason) }}</small
+          >
+          @for (line of reportLines(session); track $index) {
+          <p>{{ line }}</p>
           }
-        </ul>
-      </ng-template>
-    </p-dataview>
+          <small
+            >{{ seconds(session.activeMs) }} s ativos · {{
+            seconds(session.pausedMs) }} s em pausa</small
+          >
+        </li>
+        }
+      </ul>
+    </ng-template>
+  </p-dataview>
   }
 </p-panel>

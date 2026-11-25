@@ -1,14 +1,40 @@
-<p-dialog header="Adicionar paciente" [(visible)]="visible" [modal]="true"
-  [closable]="!store.busy()" [closeOnEscape]="!store.busy()" [draggable]="false" [resizable]="false" (onHide)="reset()">
+<p-dialog
+  header="Adicionar paciente"
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="!store.busy()"
+  [closeOnEscape]="!store.busy()"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="reset()"
+>
   <form class="grid gap-4" (ngSubmit)="create()">
     <div class="grid min-w-0 gap-1.5">
       <label class="font-semibold" for="patient-name">Nome do paciente</label>
-      <input pInputText fluid id="patient-name" name="patientName" [(ngModel)]="name"
-        maxlength="120" required [disabled]="store.busy()">
+      <input
+        pInputText
+        fluid
+        id="patient-name"
+        name="patientName"
+        [(ngModel)]="name"
+        maxlength="120"
+        required
+        [disabled]="store.busy()"
+      />
     </div>
     <div class="flex flex-wrap items-center gap-3">
-      <p-button type="submit" label="Cadastrar paciente" [loading]="store.busy()" [disabled]="!name.trim()" />
-      <p-button label="Cancelar" severity="secondary" (onClick)="visible.set(false)" [disabled]="store.busy()" />
+      <p-button
+        type="submit"
+        label="Cadastrar paciente"
+        [loading]="store.busy()"
+        [disabled]="!name.trim()"
+      />
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="visible.set(false)"
+        [disabled]="store.busy()"
+      />
     </div>
   </form>
 </p-dialog>

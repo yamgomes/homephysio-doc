@@ -1,13 +1,16 @@
 <div>
   <app-topbar />
   <main class="mx-auto max-w-7xl px-4 py-6 md:px-8 lg:px-10">
-    @if (authState.uid() && authState.emailVerified()) {
-    @if (store.message(); as message) {
-      <p-message class="mb-4 block" severity="info">{{ message }}</p-message>
+    @if (authState.uid() && authState.emailVerified()) { @if (store.message();
+    as message) {
+    <p-message class="mb-4 block" severity="info">{{ message }}</p-message>
     }
     <router-outlet />
     } @else if (!authState.uid()) {
-    <p-message id="access-required" [severity]="authState.error() ? 'error' : 'info'">
+    <p-message
+      id="access-required"
+      [severity]="authState.error() ? 'error' : 'info'"
+    >
       @if (authState.error()) {
       <p>Não foi possível verificar seu acesso. Recarregue a página.</p>
       } @else if (!authState.ready()) {

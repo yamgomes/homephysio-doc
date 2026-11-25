@@ -1,147 +1,170 @@
-      <section class="card" id="atividade">
-        <div class="eyebrow">NOVA ATIVIDADE</div>
-        <h2>Preparar uma atividade</h2>
-        <p class="sub">Defina os objetivos e as condições da sessão.</p>
-        <form (ngSubmit)="save()">
-          <label for="displayName">Nome fictício do jogador</label
-          ><input
-            pInputText
-            id="displayName"
-            name="displayName"
-            [(ngModel)]="displayName"
-            required
-          />
-          <label for="title">Título da atividade</label
-          ><input
-            pInputText
-            id="title"
-            name="title"
-            [(ngModel)]="title"
-            required
-          />
-          <label for="game">Jogo</label
-          ><p-select
-            inputId="game"
-            name="game"
-            [options]="games"
-            optionLabel="label"
-            optionValue="value"
-            [ngModel]="game"
-            (ngModelChange)="gameChanged($event)"
-          />
-          @if (game === 'surfing') { <label for="side">Lado</label
-          ><p-select
-            inputId="side"
-            name="side"
-            [options]="sides"
-            optionLabel="label"
-            optionValue="value"
-            [(ngModel)]="side"
-          />
-          <label for="targets"
-            >Alvos (%)
-            <small>Valores separados por vírgulas, por exemplo 30, 70.</small>
-          </label
-          ><input
-            pInputText
-            id="targets"
-            name="targets"
-            [(ngModel)]="targets"
-            required
-          />
-          } @else if (game === 'shoulder') {
-            <p>O jogo sorteia os alvos dentro do alcance que o paciente calibrar para cada braço.</p>
-          } @else {
-            <p>O paciente eleva os dois braços juntos, mantém pelo tempo mínimo e retorna à posição inicial.</p>
-          }
-          <div class="two">
-            @if (game !== 'shoulderElevation') {
-            <div>
-              <label for="duration">Duração da sessão (s)</label
-              ><input
-                pInputText
-                id="duration"
-                name="duration"
-                type="number"
-                min="1"
-                max="3600"
-                [(ngModel)]="duration"
-              />
-            </div>
-            }
-            <div>
-              <label for="repetitions">{{ game === 'shoulderElevation' ? 'Repetições por série' : 'Repetições mínimas' }}</label
-              ><input
-                pInputText
-                id="repetitions"
-                name="repetitions"
-                type="number"
-                min="1"
-                [(ngModel)]="repetitions"
-              />
-            </div>
-            <div>
-              <label for="timeLimit">{{ game === 'shoulderElevation' ? 'Tempo mínimo no alto (s)' : 'Tempo por alvo (s)' }}</label
-              ><input
-                pInputText
-                id="timeLimit"
-                name="timeLimit"
-                type="number"
-                min="0.1"
-                step="0.1"
-                [(ngModel)]="timeLimit"
-              />
-            </div>
-            @if (game === 'shoulderElevation') {
-              <div><label for="sets">Número de séries</label><input pInputText id="sets" name="sets" type="number" min="1" max="100" [(ngModel)]="sets" /></div>
-              <div><label for="rest">Descanso entre séries (s)</label><input pInputText id="rest" name="rest" type="number" min="0" max="3600" [(ngModel)]="rest" /></div>
-            }
-            @if (game !== 'shoulderElevation') {
-            <div>
-              <label for="hold">Permanência no alvo (s)</label
-              ><input
-                pInputText
-                id="hold"
-                name="hold"
-                type="number"
-                min="0"
-                step="0.1"
-                [(ngModel)]="hold"
-              />
-            </div>
-            }
-            @if (game !== 'shoulderElevation') {
-            <div>
-              <label for="tolerance">Tolerância (%)</label
-              ><input
-                pInputText
-                id="tolerance"
-                name="tolerance"
-                type="number"
-                min="1"
-                max="50"
-                [(ngModel)]="tolerance"
-              />
-            </div>
-            <div>
-              <label for="points">Pontos por acerto</label
-              ><input
-                pInputText
-                id="points"
-                name="points"
-                type="number"
-                min="0"
-                [(ngModel)]="points"
-              />
-            </div>
-            }
-          </div>
-          <p-button
-            type="submit"
-            icon="pi pi-save"
-            label="Salvar atividade"
-            [disabled]="store.storageError()"
-          />
-          <p id="message" role="status" aria-live="polite">{{ store.message() }}</p>
-        </form>
-      </section>
+<section class="card" id="atividade">
+  <div class="eyebrow">NOVA ATIVIDADE</div>
+  <h2>Preparar uma atividade</h2>
+  <p class="sub">Defina os objetivos e as condições da sessão.</p>
+  <form (ngSubmit)="save()">
+    <label for="displayName">Nome fictício do jogador</label
+    ><input
+      pInputText
+      id="displayName"
+      name="displayName"
+      [(ngModel)]="displayName"
+      required
+    />
+    <label for="title">Título da atividade</label
+    ><input pInputText id="title" name="title" [(ngModel)]="title" required />
+    <label for="game">Jogo</label
+    ><p-select
+      inputId="game"
+      name="game"
+      [options]="games"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="game"
+      (ngModelChange)="gameChanged($event)"
+    />
+    @if (game === 'surfing') { <label for="side">Lado</label
+    ><p-select
+      inputId="side"
+      name="side"
+      [options]="sides"
+      optionLabel="label"
+      optionValue="value"
+      [(ngModel)]="side"
+    />
+    <label for="targets"
+      >Alvos (%)
+      <small>Valores separados por vírgulas, por exemplo 30, 70.</small> </label
+    ><input
+      pInputText
+      id="targets"
+      name="targets"
+      [(ngModel)]="targets"
+      required
+    />
+    } @else if (game === 'shoulder') {
+    <p>
+      O jogo sorteia os alvos dentro do alcance que o paciente calibrar para
+      cada braço.
+    </p>
+    } @else {
+    <p>
+      O paciente eleva os dois braços juntos, mantém pelo tempo mínimo e retorna
+      à posição inicial.
+    </p>
+    }
+    <div class="two">
+      @if (game !== 'shoulderElevation') {
+      <div>
+        <label for="duration">Duração da sessão (s)</label
+        ><input
+          pInputText
+          id="duration"
+          name="duration"
+          type="number"
+          min="1"
+          max="3600"
+          [(ngModel)]="duration"
+        />
+      </div>
+      }
+      <div>
+        <label for="repetitions"
+          >{{ game === 'shoulderElevation' ? 'Repetições por série' :
+          'Repetições mínimas' }}</label
+        ><input
+          pInputText
+          id="repetitions"
+          name="repetitions"
+          type="number"
+          min="1"
+          [(ngModel)]="repetitions"
+        />
+      </div>
+      <div>
+        <label for="timeLimit"
+          >{{ game === 'shoulderElevation' ? 'Tempo mínimo no alto (s)' : 'Tempo
+          por alvo (s)' }}</label
+        ><input
+          pInputText
+          id="timeLimit"
+          name="timeLimit"
+          type="number"
+          min="0.1"
+          step="0.1"
+          [(ngModel)]="timeLimit"
+        />
+      </div>
+      @if (game === 'shoulderElevation') {
+      <div>
+        <label for="sets">Número de séries</label
+        ><input
+          pInputText
+          id="sets"
+          name="sets"
+          type="number"
+          min="1"
+          max="100"
+          [(ngModel)]="sets"
+        />
+      </div>
+      <div>
+        <label for="rest">Descanso entre séries (s)</label
+        ><input
+          pInputText
+          id="rest"
+          name="rest"
+          type="number"
+          min="0"
+          max="3600"
+          [(ngModel)]="rest"
+        />
+      </div>
+      } @if (game !== 'shoulderElevation') {
+      <div>
+        <label for="hold">Permanência no alvo (s)</label
+        ><input
+          pInputText
+          id="hold"
+          name="hold"
+          type="number"
+          min="0"
+          step="0.1"
+          [(ngModel)]="hold"
+        />
+      </div>
+      } @if (game !== 'shoulderElevation') {
+      <div>
+        <label for="tolerance">Tolerância (%)</label
+        ><input
+          pInputText
+          id="tolerance"
+          name="tolerance"
+          type="number"
+          min="1"
+          max="50"
+          [(ngModel)]="tolerance"
+        />
+      </div>
+      <div>
+        <label for="points">Pontos por acerto</label
+        ><input
+          pInputText
+          id="points"
+          name="points"
+          type="number"
+          min="0"
+          [(ngModel)]="points"
+        />
+      </div>
+      }
+    </div>
+    <p-button
+      type="submit"
+      icon="pi pi-save"
+      label="Salvar atividade"
+      [disabled]="store.storageError()"
+    />
+    <p id="message" role="status" aria-live="polite">{{ store.message() }}</p>
+  </form>
+</section>

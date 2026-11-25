@@ -58,7 +58,12 @@ export class ActivityForm {
   }
   protected gameChanged(game: Game): void {
     this.game = game;
-    this.title = game === "shoulderElevation" ? "Elevação de ombros convencional" : game === "surfing" ? "Surfe" : "Semáforo";
+    this.title =
+      game === "shoulderElevation"
+        ? "Elevação de ombros convencional"
+        : game === "surfing"
+          ? "Surfe"
+          : "Semáforo";
   }
   protected save(): void {
     const uid = this.store.currentUid();
@@ -89,7 +94,7 @@ export class ActivityForm {
         this.timeLimit <= 0 ||
         this.timeLimit > 3600 ||
         this.hold < 0 ||
-        (this.game !== 'shoulderElevation' && this.hold > this.timeLimit) ||
+        (this.game !== "shoulderElevation" && this.hold > this.timeLimit) ||
         this.tolerance < 1 ||
         this.tolerance > 50 ||
         !Number.isInteger(this.points) ||
@@ -99,14 +104,24 @@ export class ActivityForm {
         throw Error("Confira os limites e a permanência no alvo.");
       const config: Plan["config"] = {
         repetitions: this.repetitions,
-        holdMs: (this.game === "shoulderElevation" ? this.timeLimit : this.hold) * 1000,
+        holdMs:
+          (this.game === "shoulderElevation" ? this.timeLimit : this.hold) *
+          1000,
         timeLimitMs: this.timeLimit * 1000,
         tolerance: this.tolerance / 100,
         pointsPerHit: this.points,
       };
-      if (this.game !== "shoulderElevation") config.sessionDurationMs = this.duration * 1000;
+      if (this.game !== "shoulderElevation")
+        config.sessionDurationMs = this.duration * 1000;
       if (this.game === "shoulderElevation") {
-        if (!Number.isInteger(this.sets) || this.sets < 1 || this.sets > 100 || !Number.isFinite(this.rest) || this.rest < 0 || this.rest > 3600)
+        if (
+          !Number.isInteger(this.sets) ||
+          this.sets < 1 ||
+          this.sets > 100 ||
+          !Number.isFinite(this.rest) ||
+          this.rest < 0 ||
+          this.rest > 3600
+        )
           throw Error("Confira o número de séries e o tempo de descanso.");
         config.sets = this.sets;
         config.restMs = this.rest * 1000;

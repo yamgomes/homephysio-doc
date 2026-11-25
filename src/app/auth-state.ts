@@ -1,14 +1,19 @@
-import { Injectable, OnDestroy, computed, signal } from '@angular/core';
-import type { User } from 'firebase/auth';
+import { Injectable, OnDestroy, computed, signal } from "@angular/core";
+import type { User } from "firebase/auth";
 
-type FirebaseAuth = typeof import('./firebase-auth');
+type FirebaseAuth = typeof import("./firebase-auth");
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class AuthState implements OnDestroy {
   private firebase?: Promise<FirebaseAuth>;
-  private readonly account = signal<Pick<User, 'uid' | 'email' | 'emailVerified'> | null>(null);
+  private readonly account = signal<Pick<
+    User,
+    "uid" | "email" | "emailVerified"
+  > | null>(null);
   private readonly busy = signal(false);
-  private readonly feedback = signal<{ text: string; error: boolean } | null>(null);
+  private readonly feedback = signal<{ text: string; error: boolean } | null>(
+    null,
+  );
   private disposed = false;
   private unsubscribe?: () => void;
 
@@ -23,20 +28,27 @@ export class AuthState implements OnDestroy {
   initialize() {
     if (this.firebase) return this.firebase;
 
-    this.firebase = import('./firebase-auth');
-    void this.firebase.then(({ auth, onIdTokenChanged, persistenceReady }) => {
-      void persistenceReady.catch(() => {
-        if (!this.disposed) this.feedback.set({
-          text: 'Não foi possível preparar o acesso neste navegador.',
-          error: true,
+    this.firebase = import("./firebase-auth");
+    void this.firebase
+      .then(({ auth, onIdTokenChanged, persistenceReady }) => {
+        void persistenceReady.catch(() => {
+          if (!this.disposed)
+            this.feedback.set({
+              text: "Não foi possível preparar o acesso neste navegador.",
+              error: true,
+            });
         });
-      });
-      if (this.disposed) return;
-      this.unsubscribe = onIdTokenChanged(auth, user => {
-        this.updateUser(user);
-        this.ready.set(true);
-      }, () => this.fail());
-    }).catch(() => this.fail());
+        if (this.disposed) return;
+        this.unsubscribe = onIdTokenChanged(
+          auth,
+          (user) => {
+            this.updateUser(user);
+            this.ready.set(true);
+          },
+          () => this.fail(),
+        );
+      })
+      .catch(() => this.fail());
     return this.firebase;
   }
 
@@ -46,23 +58,39 @@ export class AuthState implements OnDestroy {
 
   login(email: string, password: string) {
     return this.run(({ auth, signInWithEmailAndPassword }) =>
-      signInWithEmailAndPassword(auth, email, password));
+      signInWithEmailAndPassword(auth, email, password),
+    );
   }
 
   register(email: string, password: string) {
-    return this.run(async ({ auth, createUserWithEmailAndPassword, sendEmailVerification }) => {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      try {
-        await sendEmailVerification(result.user);
-      } catch {
-        throw new Error('Conta criada, mas o e-mail de verificação não pôde ser enviado. Use “Reenviar e-mail”.');
-      }
-    }, 'Conta criada. Abra seu e-mail para confirmar o cadastro.');
+    return this.run(
+      async ({
+        auth,
+        createUserWithEmailAndPassword,
+        sendEmailVerification,
+      }) => {
+        const result = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password,
+        );
+        try {
+          await sendEmailVerification(result.user);
+        } catch {
+          throw new Error(
+            "Conta criada, mas o e-mail de verificação não pôde ser enviado. Use “Reenviar e-mail”.",
+          );
+        }
+      },
+      "Conta criada. Abra seu e-mail para confirmar o cadastro.",
+    );
   }
 
   resetPassword(email: string) {
-    return this.run(({ auth, sendPasswordResetEmail }) => sendPasswordResetEmail(auth, email),
-      'Se houver uma conta com esse e-mail, você receberá um link para redefinir a senha. Confira também o spam. Depois, volte para entrar.');
+    return this.run(
+      ({ auth, sendPasswordResetEmail }) => sendPasswordResetEmail(auth, email),
+      "Se houver uma conta com esse e-mail, você receberá um link para redefinir a senha. Confira também o spam. Depois, volte para entrar.",
+    );
   }
 
   logout() {
@@ -72,7 +100,7 @@ export class AuthState implements OnDestroy {
   resendVerification() {
     return this.run(async ({ auth, sendEmailVerification }) => {
       if (auth.currentUser) await sendEmailVerification(auth.currentUser);
-    }, 'Verificação solicitada. Confira seu e-mail.');
+    }, "Verificação solicitada. Confira seu e-mail.");
   }
 
   refreshVerification() {
@@ -80,26 +108,32 @@ export class AuthState implements OnDestroy {
       await auth.currentUser?.reload();
       await auth.currentUser?.getIdToken(true);
       if (!auth.currentUser?.emailVerified) {
-        throw new Error('Seu e-mail ainda não foi confirmado. Abra o link recebido e tente novamente.');
+        throw new Error(
+          "Seu e-mail ainda não foi confirmado. Abra o link recebido e tente novamente.",
+        );
       }
-    }, 'E-mail confirmado.');
+    }, "E-mail confirmado.");
   }
 
   async verifiedSession() {
     const { auth } = await this.initialize();
     await auth.authStateReady();
     const user = auth.currentUser;
-    if (!user) throw new Error('Entre na sua conta.');
+    if (!user) throw new Error("Entre na sua conta.");
     await user.reload();
     await user.getIdToken(true);
-    if (!user.emailVerified) throw new Error('Confirme seu e-mail antes de gerenciar pacientes.');
+    if (!user.emailVerified)
+      throw new Error("Confirme seu e-mail antes de gerenciar pacientes.");
     return { uid: user.uid, app: auth.app };
   }
 
-  private async run(action: (firebase: FirebaseAuth) => Promise<unknown>, success = '') {
+  private async run(
+    action: (firebase: FirebaseAuth) => Promise<unknown>,
+    success = "",
+  ) {
     if (this.pending()) return;
     this.busy.set(true);
-    this.feedback.set({ text: 'Aguarde…', error: false });
+    this.feedback.set({ text: "Aguarde…", error: false });
     let firebase: FirebaseAuth | undefined;
     try {
       firebase = await this.initialize();
@@ -115,8 +149,17 @@ export class AuthState implements OnDestroy {
   }
 
   private updateUser(user: User | null) {
-    if (!this.pending() && this.uid() !== (user?.uid ?? null)) this.clearMessage();
-    this.account.set(user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null);
+    if (!this.pending() && this.uid() !== (user?.uid ?? null))
+      this.clearMessage();
+    this.account.set(
+      user
+        ? {
+            uid: user.uid,
+            email: user.email,
+            emailVerified: user.emailVerified,
+          }
+        : null,
+    );
   }
 
   private fail() {
@@ -133,20 +176,40 @@ export class AuthState implements OnDestroy {
 }
 
 function accessError(error: unknown): string {
-  const code = typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string'
-    ? error.code : undefined;
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+      ? error.code
+      : undefined;
   const messages: Record<string, string> = {
-    'auth/invalid-credential': 'E-mail ou senha incorretos. Confira os dados ou recupere sua senha.',
-    'auth/wrong-password': 'E-mail ou senha incorretos. Confira os dados ou recupere sua senha.',
-    'auth/user-not-found': 'E-mail ou senha incorretos. Confira os dados ou recupere sua senha.',
-    'auth/invalid-email': 'Informe um e-mail válido.',
-    'auth/email-already-in-use': 'Não foi possível criar a conta com esse e-mail. Tente entrar ou recuperar a senha.',
-    'auth/weak-password': 'Escolha uma senha mais forte, com pelo menos 8 caracteres.',
-    'auth/password-does-not-meet-requirements': 'A senha não atende aos requisitos de segurança. Use uma senha mais forte.',
-    'auth/too-many-requests': 'Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.',
-    'auth/network-request-failed': 'Não foi possível conectar. Confira sua conexão e tente novamente.',
-    'auth/operation-not-allowed': 'O acesso por e-mail está indisponível no momento.',
-    'permission-denied': 'Ação não autorizada. Confirme seu e-mail e confira o vínculo da conta.',
+    "auth/invalid-credential":
+      "E-mail ou senha incorretos. Confira os dados ou recupere sua senha.",
+    "auth/wrong-password":
+      "E-mail ou senha incorretos. Confira os dados ou recupere sua senha.",
+    "auth/user-not-found":
+      "E-mail ou senha incorretos. Confira os dados ou recupere sua senha.",
+    "auth/invalid-email": "Informe um e-mail válido.",
+    "auth/email-already-in-use":
+      "Não foi possível criar a conta com esse e-mail. Tente entrar ou recuperar a senha.",
+    "auth/weak-password":
+      "Escolha uma senha mais forte, com pelo menos 8 caracteres.",
+    "auth/password-does-not-meet-requirements":
+      "A senha não atende aos requisitos de segurança. Use uma senha mais forte.",
+    "auth/too-many-requests":
+      "Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.",
+    "auth/network-request-failed":
+      "Não foi possível conectar. Confira sua conexão e tente novamente.",
+    "auth/operation-not-allowed":
+      "O acesso por e-mail está indisponível no momento.",
+    "permission-denied":
+      "Ação não autorizada. Confirme seu e-mail e confira o vínculo da conta.",
   };
-  return code ? messages[code] ?? 'Não foi possível concluir. Tente novamente em instantes.' : error instanceof Error ? error.message : 'Não foi possível concluir. Tente novamente.';
+  return code
+    ? (messages[code] ??
+        "Não foi possível concluir. Tente novamente em instantes.")
+    : error instanceof Error
+      ? error.message
+      : "Não foi possível concluir. Tente novamente.";
 }
