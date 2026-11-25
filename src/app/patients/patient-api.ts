@@ -1,17 +1,16 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { createCode, validCode, validTherapy } from '@homephysio/contracts';
 import type { Patient, SessionReport, Therapy } from '@homephysio/contracts';
+import { AuthState } from '../auth-state';
 
 @Injectable({ providedIn: 'root' })
 export class PatientApi {
+  private readonly auth = inject(AuthState);
+
   private async context() {
-    const { auth } = await import('../account');
-    await auth.authStateReady();
-    const user = auth.currentUser;
-    if (!user) throw Error('Entre na sua conta.');
-    await user.reload(); await user.getIdToken(true);
-    if (!user.emailVerified) throw Error('Confirme seu e-mail antes de gerenciar pacientes.');
-    const sdk = await import('firebase/firestore'); return { uid: user.uid, db: sdk.getFirestore(auth.app), sdk };
+    const { uid, app } = await this.auth.verifiedSession();
+    const sdk = await import('firebase/firestore');
+    return { uid, db: sdk.getFirestore(app), sdk };
   }
   async list(): Promise<Patient[]> {
     const { uid, db, sdk } = await this.context();

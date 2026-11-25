@@ -3,6 +3,7 @@ import { Button } from '@openng/optimus-ui/button';
 import { DataView } from '@openng/optimus-ui/dataview';
 import { Message } from '@openng/optimus-ui/message';
 import { Panel } from '@openng/optimus-ui/panel';
+import { GAME_DEFINITIONS, reportLines } from '@homephysio/contracts';
 import type { SessionReport } from '@homephysio/contracts';
 import { PatientApi } from './patient-api';
 
@@ -19,6 +20,8 @@ export class PatientHistory {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
   protected readonly date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  protected readonly reportLines = reportLines;
+  protected gameLabel(session: SessionReport) { return GAME_DEFINITIONS[session.gameId]?.label ?? session.title; }
 
   constructor() {
     effect(onCleanup => {

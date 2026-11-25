@@ -14,14 +14,17 @@ import type { TherapyField } from '@homephysio/contracts';
       <label class="font-semibold" [for]="item.key">{{ item.label }}</label>
       @if (item.kind === 'select') {
         <p-select [inputId]="item.key" [name]="item.key" [options]="item.options" optionLabel="label"
-          optionValue="value" [ngModel]="value()" (ngModelChange)="changed.emit($event)" [disabled]="disabled()" />
+          optionValue="value" [ngModel]="value()" [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="changed.emit($event)" [disabled]="disabled()" />
       } @else if (item.kind === 'list') {
         <input pInputText [id]="item.key" [name]="item.key" [placeholder]="item.placeholder"
-          [maxlength]="item.maxLength" [ngModel]="value()" (ngModelChange)="changed.emit($event)" [disabled]="disabled()" required>
+          [maxlength]="item.maxLength" [ngModel]="value()" [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="changed.emit($event)" [disabled]="disabled()" required>
       } @else {
         <p-inputnumber [inputId]="item.key" [name]="item.key" [min]="item.min" [max]="item.max"
           [step]="item.kind === 'integer' ? 1 : 10 ** -item.decimals" [maxFractionDigits]="item.decimals"
-          [useGrouping]="false" locale="pt-BR" [ngModel]="value()" (ngModelChange)="changed.emit($event)"
+          [useGrouping]="false" locale="pt-BR" [ngModel]="value()" [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="changed.emit($event)"
           [disabled]="disabled()" required />
       }
       @if (item.help) { <small class="text-[color:var(--p-text-muted-color,#64748b)]">{{ item.help }}</small> }

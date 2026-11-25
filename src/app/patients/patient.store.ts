@@ -125,6 +125,7 @@ export class PatientStore {
         this.detail.set(next);
         this.message.set(message);
       }
+      return next;
     });
   }
 }

@@ -1,0 +1,177 @@
+:host {
+  --account-surface: light-dark(#fff, #18181b);
+  --account-input: light-dark(#fff, #242427);
+  --account-border: light-dark(#dce9e1, #3f3f46);
+  --account-control-border: light-dark(#aebfb5, #71717a);
+  --account-action: light-dark(#245940, #a7e8cc);
+  --account-primary: light-dark(#246c52, #86d9b8);
+  --account-primary-text: light-dark(#fff, #122c23);
+  --account-focus: light-dark(#417c5d, #86d9b8);
+  display: block;
+  margin: 1rem 0;
+  color: light-dark(#183931, #edf2ef);
+  font: 15px/1.5 system-ui;
+}
+
+section {
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid var(--account-border);
+  border-radius: 16px;
+  background: var(--account-surface);
+}
+
+.guest {
+  max-width: 460px;
+  margin: 32px auto;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.6px;
+}
+
+p {
+  margin: 8px 0 18px;
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: light-dark(#5d7168, #b4c1b9);
+  font-size: 14px;
+}
+
+.identity {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin: 16px 0 6px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--account-control-border);
+  border-radius: 8px;
+  background: var(--account-input);
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  padding: 11px 16px;
+  border: 1px solid var(--account-control-border);
+  border-radius: 8px;
+  background: var(--account-surface);
+  color: var(--account-action);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  width: 100%;
+  margin-top: 20px;
+  border-color: var(--account-primary);
+  background: var(--account-primary);
+  color: var(--account-primary-text);
+  font-weight: 650;
+}
+
+.link {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  text-decoration: underline;
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+:is(input, button):focus-visible {
+  outline: 3px solid var(--account-focus);
+  outline-offset: 3px;
+}
+
+.heading, .actions, .password {
+  display: flex;
+}
+
+.heading {
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+}
+
+.actions {
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 12px 0;
+}
+
+.password {
+  gap: 8px;
+}
+
+.password input {
+  min-width: 0;
+}
+
+.password button {
+  white-space: nowrap;
+}
+
+#verification {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: light-dark(#fff8e8, #3d321e);
+}
+
+#message {
+  margin: 0;
+}
+
+#message.has-message {
+  margin: 8px 0 18px;
+  padding: 12px;
+  border-radius: 8px;
+  background: light-dark(#edf6ef, #20362a);
+}
+
+#message.error {
+  background: light-dark(#fff0ec, #482523);
+  color: light-dark(#8b3023, #ffc3b6);
+}
+
+:host(.compact) {
+  margin: 0;
+}
+
+:host(.compact) section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+:host(.compact) .heading {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+:host(.compact) h2 {
+  display: none;
+}
+
+:host(.compact) .identity {
+  margin: 0;
+  text-align: right;
+}
